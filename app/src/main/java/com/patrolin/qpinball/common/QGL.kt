@@ -58,7 +58,7 @@ class GLAttribute(
             GLES30.GL_FLOAT -> "GL_FLOAT"
             else -> type.toString()
         }
-        return "GLAttribute(id=$id, name=$name, type=$typeName, count=$count)"
+        return "GLAttribute(id=$id, name=$name, type=$typeName, count=$count, superCount: $superCount)"
     }
     val type: Int get() {
         return when (superType) {

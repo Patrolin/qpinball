@@ -14,10 +14,20 @@ fun simulate() {
 }
 
 // data
-class Ball(var x: Double, var y: Double)
-val balls = listOf(Ball(0.0, 0.0))
+class Ball(var x: Double, var y: Double, var radius: Double = 50.0)
+val balls = listOf(
+    Ball(0.0, 0.0),
+    Ball(-1.0, 0.0),
+    Ball(1.0, 0.0),
+    Ball(0.0, -1.0),
+    Ball(0.0, 1.0),
+    Ball(.5, 50*TIME_STEP),
+    Ball(0.0, 50*TIME_STEP),
+    Ball(0.0, 100*TIME_STEP),
+    Ball(0.0, 150*TIME_STEP),
+)
 fun simulateStep() {
     for (ball in balls) {
-        ball.y -= 0.1 * TIME_STEP
+        ball.y -= 0.0 * TIME_STEP
     }
 }

@@ -14,7 +14,10 @@ fun glCreateProgram(vertexShader: String, fragmentShader: String): Int {
     // link
     GLES30.glLinkProgram(programId)
     val linkStatus = glGetProgramInteger(programId, GLES30.GL_LINK_STATUS)
-    if (linkStatus == 0) throw Exception("Failed to link GL program")
+    if (linkStatus == 0) {
+        val programLog = GLES30.glGetProgramInfoLog(programId)
+        throw Exception("Failed to link GL program\n\n${programLog}")
+    }
     GLES30.glUseProgram(programId)
     return programId
 }
@@ -25,8 +28,12 @@ fun glCreateShader(src: String, type: Int): Int {
     GLES30.glCompileShader(shaderId)
     val compileStatus = glGetShaderInteger(shaderId, GLES30.GL_COMPILE_STATUS)
     val shaderLog = GLES30.glGetShaderInfoLog(shaderId)
-    if ((compileStatus == 0) || shaderLog.startsWith("ERROR"))
-        throw Exception("Failed to compile shader (compileStatus=${compileStatus}):\n\n${src}\n\n${shaderLog}")
+    if ((compileStatus == 0) || shaderLog.startsWith("ERROR")) {
+        val errorPosString = "(\\d+):(\\d+)".toRegex().matchAt(shaderLog.removePrefix("ERROR: "), 0)
+        val errorPosY = if (errorPosString != null) errorPosString.groupValues[2].toInt() else null
+        val errorLine = if (errorPosY != null) "${src.lines()[errorPosY - 1]}\n" else ""
+        throw Exception("Failed to compile shader (compileStatus=${compileStatus}):\n\n${src}\n\n${shaderLog}${errorLine}")
+    }
     return shaderId
 }
 fun glGetProgramInteger(programId: Int, id: Int): Int {

@@ -15,11 +15,17 @@ class Renderer : GLSurfaceView.Renderer {
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
         programId = glCreateProgram("""
             #version 300 es
+            
+            uniform lowp vec2 uResolution;
             layout(location = 0) in vec2 vPos;
+            
+            out vec2 fPos;
             out vec4 fColor;
+            
             void main() {
-                gl_PointSize = 10.0;
+                gl_PointSize = 100.0;
                 gl_Position = vec4(vPos.x, vPos.y, 0.0, 1.0);
+                fPos = vec2(vPos.x * uResolution.x/2.0, vPos.y * uResolution.y/2.0);
                 fColor = vec4(1.0, 0.0, 0.0, 1.0);
             }
         """.trimIndent(),
@@ -27,16 +33,37 @@ class Renderer : GLSurfaceView.Renderer {
             #version 300 es
             precision mediump float;
             
+            uniform lowp vec2 uResolution;
+            in vec2 fPos;
             in vec4 fColor;
+            
             out vec4 color;
-            void main(){
-                color = fColor;
+            
+            float linStep(float x, float a, float b) {
+                return clamp((x-a)/b, 0.0, 1.0);
+            }
+            float L2(vec2 v) {
+                return sqrt(v.x*v.x + v.y*v.y);
+            }
+            void drawCircle() {
+                vec2 pixelPos = vec2(gl_FragCoord.x - uResolution.x/2.0, gl_FragCoord.y - uResolution.y/2.0);
+                float RADIUS = 50.0;
+                float r = L2(pixelPos - fPos);
+                float circleMask = 1.0 - linStep(r, RADIUS, 1.0);
+                color = vec4(fColor.xyz, fColor.w * circleMask);
+                //color = fColor * vec4(circleAlpha);
+                //color = fColor * vec4(r < RADIUS);            
+            }
+            void main() {
+                drawCircle();
             }
         """.trimIndent())
         val (newBufferId, newBufferElementSize) = glSetupBuffer(programId)
         bufferId = newBufferId
         bufferElementSize = newBufferElementSize
         GLES30.glClearColor(0.5f, 0.5f, 0.5f, 1f)
+        GLES30.glBlendFunc(GLES30.GL_SRC_ALPHA, GLES30.GL_ONE_MINUS_SRC_ALPHA)
+        GLES30.glEnable(GLES30.GL_BLEND)
     }
     override fun onDrawFrame(gl: GL10?) {
         GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT)
@@ -47,6 +74,7 @@ class Renderer : GLSurfaceView.Renderer {
             val ball = balls[i]
             bufferOffset += glWriteFloat(bufferData, ball.x.toFloat())
             bufferOffset += glWriteFloat(bufferData, ball.y.toFloat())
+            // TODO: radius attribute
         }
         if (bufferOffset % bufferElementSize != 0) fail("Written incorrect element size")
         GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, bufferId)
@@ -56,6 +84,8 @@ class Renderer : GLSurfaceView.Renderer {
         GLES30.glDrawArrays(GLES30.GL_POINTS, 0, balls.size)
     }
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
+        debugPrint("windowSize: $width, $height")
         GLES30.glViewport(0,0, width, height)
+        GLES30.glUniform2f(GLES30.glGetUniformLocation(programId, "uResolution"), width.toFloat(), height.toFloat())
     }
 }

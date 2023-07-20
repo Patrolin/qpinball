@@ -73,7 +73,7 @@ class Renderer : GLSurfaceView.Renderer {
             void drawCircleSDF() {
                 vec2 pixelPos = vec2(gl_FragCoord.x - uResolution.x/2.0, gl_FragCoord.y - uResolution.y/2.0);
                 float r = L2(pixelPos - fPos);
-                float circleMask = 1.0 - linStep(r, fRadius-1.0, 1.0);
+                float circleMask = 1.0 - linStep(r, fRadius-0.5, 0.5);
                 color = vec4(fColor.rgb, fColor.a * circleMask);
             }
             void drawCircleBetter() {
@@ -106,6 +106,22 @@ class Renderer : GLSurfaceView.Renderer {
                 float circleMask = abs(polygonArea);
                 color = vec4(fColor.rgb, fColor.a * circleMask);
             }
+            void drawCircleGroundTruth() {
+                vec2 pixelPos = vec2(gl_FragCoord.x - uResolution.x/2.0, gl_FragCoord.y - uResolution.y/2.0);
+                float PHI_1 = (1.0 + sqrt(5.0)) / 2.0;
+                float PHI_2 = 1.324717957244746025960908854;
+                int accMask = 0;
+                int N = 1000;
+                for (int i = 0; i < N; i++) {
+                    vec2 rand = vec2(
+                        mod((float(i) / PHI_1), 1.0) - 0.5,
+                        mod((float(i) / PHI_2), 1.0) - 0.5
+                    );
+                    float r = L2((pixelPos + rand) - fPos);
+                    accMask += int(r < fRadius);
+                }
+                color = fColor * vec4(float(accMask) / float(N));
+            }
             void main() {
                 if (fShaderId == 0) {
                     drawCircleFlat();
@@ -113,6 +129,8 @@ class Renderer : GLSurfaceView.Renderer {
                     drawCircleSDF();
                 } else if (fShaderId == 2) {
                     drawCircleBetter();
+                } else if (fShaderId == 3) {
+                    drawCircleGroundTruth();
                 }
             }
         """.trimIndent())

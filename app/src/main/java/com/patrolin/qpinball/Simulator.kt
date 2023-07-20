@@ -16,12 +16,14 @@ fun simulate() {
 // data
 class Ball(var x: Double, var y: Double, var radius: Double = 50.0, var shaderId: Int = 0)
 val balls = listOf(
-    Ball(-0.3, 0.0, shaderId=0),
+    Ball(-0.2, 0.0, shaderId=0),
     Ball(0.0, 0.0, shaderId=1),
-    Ball(0.3, 0.0, shaderId=2),
+    Ball(0.2, 0.0, shaderId=2),
+    Ball(0.4, 0.0, shaderId=3),
     Ball(-0.1, 0.1, 10.0, shaderId=0),
     Ball(0.0, 0.1, 10.0, shaderId=1),
     Ball(0.1, 0.1, 10.0, shaderId=2),
+    Ball(0.2, 0.1, 10.0, shaderId=3),
     /*Ball(0.0, -1.0),
     Ball(0.0, 1.0),
     Ball(.5, 50*TIME_STEP),

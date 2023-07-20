@@ -19,9 +19,11 @@ class Renderer : GLSurfaceView.Renderer {
             uniform lowp vec2 uResolution;
             in vec2 vPos;
             in float vRadius;
+            in int vShaderId;
             
             out vec2 fPos;
             out float fRadius;
+            flat out int fShaderId;
             out vec4 fColor;
             
             void main() {
@@ -29,6 +31,7 @@ class Renderer : GLSurfaceView.Renderer {
                 gl_Position = vec4(vPos.x, vPos.y, 0.0, 1.0);
                 fPos = vec2(vPos.x * uResolution.x/2.0, vPos.y * uResolution.y/2.0);
                 fRadius = vRadius;
+                fShaderId = vShaderId;
                 fColor = vec4(1.0, 0.0, 0.0, 1.0);
             }
         """.trimIndent(),
@@ -39,6 +42,7 @@ class Renderer : GLSurfaceView.Renderer {
             uniform lowp vec2 uResolution;
             in vec2 fPos;
             in float fRadius;
+            flat in int fShaderId;
             in vec4 fColor;
             
             out vec4 color;
@@ -66,10 +70,10 @@ class Renderer : GLSurfaceView.Renderer {
                 float r = L2(pixelPos - fPos);
                 color = fColor * vec4(r < fRadius);
             }
-            void drawCircle() {
+            void drawCircleSDF() {
                 vec2 pixelPos = vec2(gl_FragCoord.x - uResolution.x/2.0, gl_FragCoord.y - uResolution.y/2.0);
                 float r = L2(pixelPos - fPos);
-                float circleMask = 1.0 - linStep(r, fRadius, 1.0);
+                float circleMask = 1.0 - linStep(r, fRadius-1.0, 1.0);
                 color = vec4(fColor.rgb, fColor.a * circleMask);
             }
             void drawCircleBetter() {
@@ -103,10 +107,16 @@ class Renderer : GLSurfaceView.Renderer {
                 color = vec4(fColor.rgb, fColor.a * circleMask);
             }
             void main() {
-                drawCircleBetter();
+                if (fShaderId == 0) {
+                    drawCircleFlat();
+                } else if (fShaderId == 1) {
+                    drawCircleSDF();
+                } else if (fShaderId == 2) {
+                    drawCircleBetter();
+                }
             }
         """.trimIndent())
-        val (newBufferId, newBufferElementSize) = glSetupBuffer(programId, listOf("vPos", "vRadius"))
+        val (newBufferId, newBufferElementSize) = glSetupBuffer(programId, listOf("vPos", "vRadius", "vShaderId"))
         bufferId = newBufferId
         bufferElementSize = newBufferElementSize
         GLES30.glClearColor(0.5f, 0.5f, 0.5f, 1f)
@@ -128,6 +138,7 @@ class Renderer : GLSurfaceView.Renderer {
             bufferOffset += glWriteFloat(bufferData, ball.x.toFloat())
             bufferOffset += glWriteFloat(bufferData, ball.y.toFloat())
             bufferOffset += glWriteFloat(bufferData, ball.radius.toFloat())
+            bufferOffset += glWriteInt(bufferData, ball.shaderId)
         }
         if (bufferOffset % bufferElementSize != 0) fail("Written incorrect element size")
         GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, bufferId)

@@ -57,6 +57,8 @@ class GLAttribute(
     override fun toString(): String {
         val typeName = when (type) {
             GLES30.GL_FLOAT -> "GL_FLOAT"
+            GLES30.GL_INT -> "GL_INT"
+            GLES30.GL_UNSIGNED_INT -> "GL_UNSIGNED_INT"
             else -> type.toString()
         }
         return "GLAttribute(id=$id, name=$name, type=$typeName, count=$count, superCount: $superCount)"
@@ -159,14 +161,13 @@ fun glSetupBuffer(programId: Int, attributeNames: List<String>): Pair<Int, Int> 
 
 // write data
 fun glWriteInt(buffer: ByteBuffer, value: Int): Int {
-    buffer.put(value.shr(24).toByte())
-    buffer.put(value.shr(16).toByte())
-    buffer.put(value.shr(8).toByte())
     buffer.put(value.toByte())
+    buffer.put(value.shr(8).toByte())
+    buffer.put(value.shr(16).toByte())
+    buffer.put(value.shr(24).toByte())
     return 4
 }
 fun glWriteFloat(buffer: ByteBuffer, value: Float): Int {
-    val bits = value.toBits()
-    glWriteInt(buffer, reverseBytes(bits))
+    glWriteInt(buffer, value.toBits())
     return 4
 }

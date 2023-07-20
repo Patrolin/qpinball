@@ -46,9 +46,21 @@ class Renderer : GLSurfaceView.Renderer {
             float linStep(float x, float a, float b) {
                 return clamp((x-a)/b, 0.0, 1.0);
             }
+            float solveLerp(float a, float b, float c) {
+                return (a - c) / (a - b);
+            }
             float L2(vec2 v) {
                 return sqrt(v.x*v.x + v.y*v.y);
             }
+            vec2 normalizeIfBigger(vec2 v, float R) {
+                float L = L2(v);
+                if (L > R) return v * vec2(R/L);
+                return v;
+            }
+            float gaOuterProduct(vec2 a, vec2 b) {
+                return a.x*b.y - a.y*b.x;
+            }
+            
             void drawCircleFlat() {
                 vec2 pixelPos = vec2(gl_FragCoord.x - uResolution.x/2.0, gl_FragCoord.y - uResolution.y/2.0);
                 float r = L2(pixelPos - fPos);
@@ -60,8 +72,38 @@ class Renderer : GLSurfaceView.Renderer {
                 float circleMask = 1.0 - linStep(r, fRadius, 1.0);
                 color = vec4(fColor.rgb, fColor.a * circleMask);
             }
+            void drawCircleBetter() {
+                vec2 centeredPixelPos = vec2(gl_FragCoord.x - uResolution.x/2.0, gl_FragCoord.y - uResolution.y/2.0) - fPos;
+                vec2 A = vec2(centeredPixelPos.x - 0.5, centeredPixelPos.y - 0.5);
+                A = normalizeIfBigger(A, fRadius);
+                vec2 B = vec2(centeredPixelPos.x + 0.5, centeredPixelPos.y - 0.5);
+                B = normalizeIfBigger(B, fRadius);
+                vec2 C = vec2(centeredPixelPos.x + 0.5, centeredPixelPos.y + 0.5);
+                C = normalizeIfBigger(C, fRadius);
+                vec2 D = vec2(centeredPixelPos.x - 0.5, centeredPixelPos.y + 0.5);
+                D = normalizeIfBigger(D, fRadius);
+                float polygonArea = (gaOuterProduct(A, B) + gaOuterProduct(B, C)
+                    + gaOuterProduct(C, D) + gaOuterProduct(D, A)) / 2.0;
+                float circleMask = abs(polygonArea);
+                color = vec4(fColor.rgb, fColor.a * circleMask);
+            }
+            void drawCircleBetterer() {
+                vec2 centeredPixelPos = vec2(gl_FragCoord.x - uResolution.x/2.0, gl_FragCoord.y - uResolution.y/2.0) - fPos;
+                vec2 A = vec2(centeredPixelPos.x - 0.5, centeredPixelPos.y - 0.5);
+                vec2 B = vec2(centeredPixelPos.x + 0.5, centeredPixelPos.y - 0.5);
+                vec2 C = vec2(centeredPixelPos.x + 0.5, centeredPixelPos.y + 0.5);
+                vec2 D = vec2(centeredPixelPos.x - 0.5, centeredPixelPos.y + 0.5);
+                vec2 P_A = vec2(clamp(-sqrt(fRadius*fRadius - A.y*A.y), A.x, B.x), A.y);
+                vec2 P_B = vec2(B.x, clamp(-sqrt(fRadius*fRadius - B.x*B.x), B.y, C.y));
+                vec2 P_C = vec2(clamp(sqrt(fRadius*fRadius - C.y*C.y), D.x, C.x), C.y);
+                vec2 P_D = vec2(D.x, clamp(sqrt(fRadius*fRadius - D.x*D.x), A.y, D.y));
+                float polygonArea = (gaOuterProduct(P_A, P_B) + gaOuterProduct(P_B, P_C)
+                    + gaOuterProduct(P_C, P_D) + gaOuterProduct(P_D, P_A)) / 2.0;
+                float circleMask = abs(polygonArea);
+                color = vec4(fColor.rgb, fColor.a * circleMask);
+            }
             void main() {
-                drawCircle();
+                drawCircleBetter();
             }
         """.trimIndent())
         val (newBufferId, newBufferElementSize) = glSetupBuffer(programId, listOf("vPos", "vRadius"))

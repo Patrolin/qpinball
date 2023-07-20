@@ -47,6 +47,7 @@ fun glGetShaderInteger(shaderId: Int, id: Int): Int {
     return intArray[0]
 }
 
+// buffer
 class GLAttribute(
     val id: Int,
     val name: String,
@@ -119,28 +120,34 @@ fun glGetAttributes(programId: Int): List<GLAttribute> {
     }
     return acc
 }
-fun glSetupBuffer(programId: Int): Pair<Int, Int> {
+fun glSetupBuffer(programId: Int, attributeNames: List<String>): Pair<Int, Int> {
     val bufferIdsBuffer = IntArray(1)
     GLES30.glGenBuffers(1, bufferIdsBuffer, 0)
     val bufferId = bufferIdsBuffer[0]
-    val attributes = glGetAttributes(programId)
+    val attributeMap = glGetAttributes(programId).associateBy { it.name }
     GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, bufferId)
-    var offset = 0
-    for (attribute in attributes) {
+    var vertexSize = 0
+    for (attributeName in attributeNames) {
+        val attribute = attributeMap[attributeName]
         debugPrint("attribute: $attribute")
-        GLES30.glEnableVertexAttribArray(attribute.id)
+        vertexSize += attribute!!.size
+    }
+    var offset = 0
+    for (attributeName in attributeNames) {
+        val attribute = attributeMap[attributeName]
+        GLES30.glEnableVertexAttribArray(attribute!!.id)
         val count = attribute.count
         val countDivisor = count / 4
         val countRemainder = count % 4
         for (i in 0.until(countDivisor)) {
-            GLES30.glVertexAttribPointer(attribute.id + i, 4, attribute.type, false, 0, 0)
+            GLES30.glVertexAttribPointer(attribute.id + i, 4, attribute.type, false, vertexSize, offset)
         }
         if (countRemainder != 0) {
-            GLES30.glVertexAttribPointer(attribute.id + countDivisor, countRemainder, attribute.type, false, 0, 0)
+            GLES30.glVertexAttribPointer(attribute.id + countDivisor, countRemainder, attribute.type, false, vertexSize, offset)
         }
         offset += attribute.size
     }
-    return bufferId to offset
+    return bufferId to vertexSize
 }
 
 // write data

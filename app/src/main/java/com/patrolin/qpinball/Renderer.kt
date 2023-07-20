@@ -71,6 +71,11 @@ class Renderer : GLSurfaceView.Renderer {
         GLES30.glBlendFunc(GLES30.GL_SRC_ALPHA, GLES30.GL_ONE_MINUS_SRC_ALPHA)
         GLES30.glEnable(GLES30.GL_BLEND)
     }
+    override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
+        debugPrint("windowSize: $width, $height")
+        GLES30.glViewport(0,0, width, height)
+        GLES30.glUniform2f(GLES30.glGetUniformLocation(programId, "uResolution"), width.toFloat(), height.toFloat())
+    }
     override fun onDrawFrame(gl: GL10?) {
         GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT)
         simulate()
@@ -88,10 +93,5 @@ class Renderer : GLSurfaceView.Renderer {
         bufferData.rewind()
         GLES30.glBufferData(GLES30.GL_ARRAY_BUFFER, bufferData.limit(), bufferData, GLES30.GL_STATIC_DRAW)
         GLES30.glDrawArrays(GLES30.GL_POINTS, 0, balls.size)
-    }
-    override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
-        debugPrint("windowSize: $width, $height")
-        GLES30.glViewport(0,0, width, height)
-        GLES30.glUniform2f(GLES30.glGetUniformLocation(programId, "uResolution"), width.toFloat(), height.toFloat())
     }
 }

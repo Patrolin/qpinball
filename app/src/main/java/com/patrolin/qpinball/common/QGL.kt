@@ -120,6 +120,13 @@ fun glGetAttributes(programId: Int): List<GLAttribute> {
     }
     return acc
 }
+fun glSetAttributeLayout(id: Int, size: Int, type: Int, normalized: Boolean, stride: Int, offset: Int) {
+    if (type == GLES30.GL_INT || type == GLES30.GL_UNSIGNED_INT) {
+        GLES30.glVertexAttribIPointer(id, size, type, stride, offset)
+    } else {
+        GLES30.glVertexAttribPointer(id, size, type, normalized, stride, offset)
+    }
+}
 fun glSetupBuffer(programId: Int, attributeNames: List<String>): Pair<Int, Int> {
     val bufferIdsBuffer = IntArray(1)
     GLES30.glGenBuffers(1, bufferIdsBuffer, 0)
@@ -140,10 +147,10 @@ fun glSetupBuffer(programId: Int, attributeNames: List<String>): Pair<Int, Int> 
         val countDivisor = count / 4
         val countRemainder = count % 4
         for (i in 0.until(countDivisor)) {
-            GLES30.glVertexAttribPointer(attribute.id + i, 4, attribute.type, false, vertexSize, offset)
+            glSetAttributeLayout(attribute.id + i, 4, attribute.type, false, vertexSize, offset)
         }
         if (countRemainder != 0) {
-            GLES30.glVertexAttribPointer(attribute.id + countDivisor, countRemainder, attribute.type, false, vertexSize, offset)
+            glSetAttributeLayout(attribute.id + countDivisor, countRemainder, attribute.type, false, vertexSize, offset)
         }
         offset += attribute.size
     }

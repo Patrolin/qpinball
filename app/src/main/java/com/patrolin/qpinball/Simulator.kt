@@ -38,8 +38,9 @@ fun acceleration(ball: Ball): Vec2 {
 }
 fun simulateStep() {
     for (ball in balls) {
-        ball.vel += acceleration(ball) * TIME_STEP
-        ball.pos += ball.vel * TIME_STEP
+        val acc = acceleration(ball)
+        ball.pos += (acc * TIME_STEP + ball.vel) * TIME_STEP
+        ball.vel += acc * TIME_STEP
         if (ball.pos.y < (-1.0 + ball.r / screenSize.y)) ball.vel.y = -ball.vel.y
     }
 }

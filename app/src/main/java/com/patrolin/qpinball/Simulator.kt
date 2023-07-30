@@ -5,14 +5,15 @@ import com.patrolin.qpinball.common.*
 // common
 var screenSize = Vec2()
 var prev_t = time()
-const val TIME_STEP = 1/240.0
+const val TIME_STEP = 1/120.0
 fun simulate() {
     //debugPrint("balls[1]: ${balls[1]}")
     val t = time()
-    while (t - prev_t > TIME_STEP) {
+    while (t - prev_t > TIME_STEP) { // TODO: limit number of steps
         simulateStep()
         prev_t += TIME_STEP
     }
+    // TODO: render extrapolated sim
 }
 
 // data

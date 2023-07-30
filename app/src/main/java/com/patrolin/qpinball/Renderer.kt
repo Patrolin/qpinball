@@ -68,12 +68,13 @@ class Renderer : GLSurfaceView.Renderer {
             void drawCircleFlat() {
                 vec2 pixelPos = vec2(gl_FragCoord.x - uResolution.x/2.0, gl_FragCoord.y - uResolution.y/2.0);
                 float r = L2(pixelPos - fPos);
-                color = fColor * vec4(r < fRadius);
+                float circleMask = float(r < fRadius);
+                color = vec4(fColor.rgb, fColor.a * circleMask);
             }
             void drawCircleSDF() {
                 vec2 pixelPos = vec2(gl_FragCoord.x - uResolution.x/2.0, gl_FragCoord.y - uResolution.y/2.0);
                 float r = L2(pixelPos - fPos);
-                float circleMask = 1.0 - linStep(r, fRadius-0.5, 0.5);
+                float circleMask = 1.0 - linStep(r, fRadius-1.1, 1.1);
                 color = vec4(fColor.rgb, fColor.a * circleMask);
             }
             void drawCircleBetter() {
@@ -120,7 +121,8 @@ class Renderer : GLSurfaceView.Renderer {
                     float r = L2((pixelPos + rand) - fPos);
                     accMask += int(r < fRadius);
                 }
-                color = fColor * vec4(float(accMask) / float(N));
+                float circleMask = float(accMask) / float(N);
+                color = vec4(fColor.rgb, fColor.a * circleMask);
             }
             void main() {
                 if (fShaderId == 0) {
@@ -145,6 +147,7 @@ class Renderer : GLSurfaceView.Renderer {
         debugPrint("windowSize: $width, $height")
         GLES30.glViewport(0,0, width, height)
         GLES30.glUniform2f(GLES30.glGetUniformLocation(programId, "uResolution"), width.toFloat(), height.toFloat())
+        screenSize = Vec2(width.toDouble(), height.toDouble())
     }
     override fun onDrawFrame(gl: GL10?) {
         GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT)
@@ -153,9 +156,9 @@ class Renderer : GLSurfaceView.Renderer {
         var bufferOffset = 0
         for (i in balls.indices) {
             val ball = balls[i]
-            bufferOffset += glWriteFloat(bufferData, ball.x.toFloat())
-            bufferOffset += glWriteFloat(bufferData, ball.y.toFloat())
-            bufferOffset += glWriteFloat(bufferData, ball.radius.toFloat())
+            bufferOffset += glWriteFloat(bufferData, ball.pos.x.toFloat())
+            bufferOffset += glWriteFloat(bufferData, ball.pos.y.toFloat())
+            bufferOffset += glWriteFloat(bufferData, ball.r.toFloat())
             bufferOffset += glWriteInt(bufferData, ball.shaderId)
         }
         if (bufferOffset % bufferElementSize != 0) fail("Written incorrect element size")

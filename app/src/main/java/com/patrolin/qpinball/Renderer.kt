@@ -144,6 +144,10 @@ class Renderer : GLSurfaceView.Renderer {
         GLES30.glEnable(GLES30.GL_BLEND)
     }
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
+        val projection = Vec2(1.0, 1.0).projection(Vec2(1.0, 0.0))
+        val rejection = Vec2(1.0, 1.0).rejection(Vec2(1.0, 0.0))
+        debugPrint("projection: $projection")
+        debugPrint("rejection: $rejection")
         debugPrint("windowSize: $width, $height")
         GLES30.glViewport(0,0, width, height)
         GLES30.glUniform2f(GLES30.glGetUniformLocation(programId, "uResolution"), width.toFloat(), height.toFloat())

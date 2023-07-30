@@ -7,7 +7,7 @@ var screenSize = Vec2()
 var prev_t = time()
 const val TIME_STEP = 1/240.0
 fun simulate() {
-    debugPrint("balls[1]: ${balls[1]}")
+    //debugPrint("balls[1]: ${balls[1]}")
     val t = time()
     while (t - prev_t > TIME_STEP) {
         simulateStep()

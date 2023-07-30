@@ -31,7 +31,7 @@ val balls = listOf(
     Ball(Vec2(0.1, 0.0), r=10.0),
     Ball(Vec2(0.2, 0.0), r=10.0),
 )
-const val GRAVITY_PX_PER_S = -175.0
+const val GRAVITY_PX_PER_S = -350.0
 fun acceleration(ball: Ball): Vec2 {
     val gravity = GRAVITY_PX_PER_S / screenSize.y
     return Vec2(0.0, gravity)
@@ -39,7 +39,7 @@ fun acceleration(ball: Ball): Vec2 {
 fun simulateStep() {
     for (ball in balls) {
         val acc = acceleration(ball)
-        ball.pos += (acc * TIME_STEP + ball.vel) * TIME_STEP
+        ball.pos += (acc * TIME_STEP * 0.5 + ball.vel) * TIME_STEP
         ball.vel += acc * TIME_STEP
         if (ball.pos.y < (-1.0 + ball.r / screenSize.y)) ball.vel.y = -ball.vel.y
     }
